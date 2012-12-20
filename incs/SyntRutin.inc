@@ -1,12 +1,5 @@
 .equ SyntRutin = 1
 
-;если вектор определён - вывести его.
-			.MACRO VECTOR
-				.IFDEF @0
-					.ORG @1
-				.ENDIF
-			.ENDM
-
 ; Загрузка числа в порт
 			.MACRO 	OUTI
 			LDI 	R16,@1

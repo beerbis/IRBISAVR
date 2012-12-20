@@ -6,22 +6,18 @@
 */
 
 .IFDEF AzbukaMorze
-	.ALERT "Модуль AzbukaMorze подключен ранее!"
+	.ERROR ">>>Модуль AzbukaMorze подключен ранее!<<<"
 .ENDIF
-.IFNDEF RTOS_TimeService
-	.ALERT "Служба таймеров не подключена."
-.ENDM
+.IFNDEF RTOS
+	.ERROR ">>>RTOS required<<<"
+.ENDIF
 .equ AzbukaMorze = 1
 
-.equ TimeDot    = 400;ms
-.equ TireTime   = TimeDot*2;ms
-.equ SignPause  = TimeDot;ms
-.equ LeterPause = TireTime;ms
+.equ MzTimeDot    = 400;ms
+.equ MzTimeTire   = MzTimeDot*2;ms
+.equ MzSignPause  = MzTimeDot;ms
+.equ MzLeterPause = MzTimeTire;ms
 
-.IFDEF Tmp2
-	.ALERT
-.ENDIF
-.def Tmp2 = R17;Временное определение, до подключения RTOS_macro
 
 .dseg
 MzLeterCounter: .byte 1
@@ -30,10 +26,13 @@ MzBitLeter: .byte 1
 
 .cseg
 MzAzbuka:
+MzAzbukaEN:
 .db/*A*/	2,	65,  /*B*/	4,	136, /*C*/	4,	138, /*D*/	3,	100, /*E*/	1,	32,  /*F*/	4,	130, /*G*/	3,	102, /*H*/	4,	128
 .db/*I*/	2,	64,  /*J*/	4,	135, /*K*/	3,	101, /*L*/	4,	132, /*M*/	2,	67,  /*N*/	2,	66,  /*O*/	3,	103, /*P*/	4,	134
 .db/*Q*/	4,	141, /*R*/	3,	98,  /*S*/	3,	96,  /*T*/	1,	33,  /*U*/	3,	97,  /*V*/	4,	129, /*W*/	3,	99,  /*X*/	4,	137
-.db/*Y*/	4,	139, /*Z*/	4,	140, /*А*/	2,	65,  /*Б*/	4,	136, /*В*/	3,	99,  /*Г*/	3,	102, /*Д*/	3,	100, /*Е*/	1,	32
+.db/*Y*/	4,	139, /*Z*/	4,	140
+MzAzbukaRU:
+.db/*А*/	2,	65,  /*Б*/	4,	136, /*В*/	3,	99,  /*Г*/	3,	102, /*Д*/	3,	100, /*Е*/	1,	32
 .db/*Ж*/	4,	129, /*З*/	4,	140, /*И*/	2,	64,  /*Й*/	4,	135, /*К*/	3,	101, /*Л*/	4,	132, /*М*/	2,	67,  /*Н*/	2,	66
 .db/*О*/	3,	103, /*П*/	4,	134, /*Р*/	3,	98,  /*С*/	3,	96,  /*Т*/	1,	33,  /*У*/	3,	97,  /*Ф*/	4,	130, /*Х*/	4,	128
 .db/*Ц*/	4,	138, /*Ч*/	4,	142, /*Ш*/	4,	143, /*Щ*/	4,	141, /*Ъ*/	0,	0,	 /*Ы*/	4,	139, /*Ь*/	4,	137, /*Э*/	5,	164
@@ -41,10 +40,10 @@ MzAzbuka:
 
 .MACRO MzCheckLineDefs
 	.IFNDEF MzLinePort
-		.ALERT "Не определён порт линии передачи данных"
+		.ERROR "MzLinePort not defined"
 	.ENDIF
 	.IFDEF MzLinePin
-		.ALERT "Не Определён пин порта передачи данных"
+		.ERROR "MzLinePin not defined"
 	.ENDIF
 .ENDM
 
@@ -82,18 +81,16 @@ MzAzbuka:
 	MzLineUp
 	LDS Tmp2, MzBitLeter
 	LSR Tmp2	;Flasg[C] := Tmp2[0]; Tmp2[n]:= Tmp2[n+1]
-	BRCC MzDoPlayBit_Dot
+	BRCC Dot
 	;Do Tire
-	RJMP MzDoPlayBit_Start_ChoosEnd
-MzDoPlayBit_Start_Dot:
+	RJMP ChoosEnd
+Dot:
 	
-MzDoPlayBit_Start_ChoosEnd:
+ChoosEnd:
 	LDS Tmp2, MzBitCounter
 	DEC Tmp2
-	BRNE MzDoPlayBit_Start_Exit
+	BRNE Exit
 	;Букву достучали - следующая?
-MzDoPlayBit_Start_Exit:
+Exit:
 	STS MzBitCounter, Tmp2
 .ENDM
-
-.MACRO 

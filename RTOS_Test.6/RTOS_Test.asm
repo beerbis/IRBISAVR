@@ -13,6 +13,7 @@
 			.equ RTOS_TimersPoolSize = 5
 			.include "..\incs\RTOS.inc"	; Макросы: в очередь таймеров, в очередь исполнения, служба таймеров(на прерывании у нас)
 			.include "..\incs\Usart.inc"
+			.include "..\incs\AzbukaMorze.inc"
 .DSEG
 R_flag:		.byte	1
 
