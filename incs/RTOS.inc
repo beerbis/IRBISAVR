@@ -19,15 +19,15 @@
 .ENDIF
 .IFNDEF RTOS_TaskQueueSize 
 	.ERROR ">>>RTOS_TaskQueueSize: is empty, plees define em before Unit including<<<"
-	.ELSE
-		.DSEG
-		RTOS_TaskQueue: 	.byte 	RTOS_TaskQueueSize 	; Адрес очереди задач в SRAM
+.ELSE
+	.DSEG
+	RTOS_TaskQueue: 	.byte 	RTOS_TaskQueueSize 	; Адрес очереди задач в SRAM
 .ENDIF
 .IFNDEF RTOS_TimersPoolSize
 	.WARNING ">>>RTOS_TimersPoolSize: is empty. TimerService will not be Existing, should be defined before unit including<<<"
-	.ELSE
-		.DSEG
-		RTOS_TimersPool:	.byte 	RTOS_TimersPoolSize*3; Адреса информации о таймерах
+.ELSE
+	.DSEG
+	RTOS_TimersPool:	.byte 	RTOS_TimersPoolSize*3; Адреса информации о таймерах
 .ENDIF
 .equ RTOS = 1
 
@@ -203,19 +203,13 @@ CTL01:	st 		Z+, OSRG		; Event
 	RTOS_InitTimersPoolHD
 
 ;== LOAD TASK ADDR ============================================================
-	.macro RTOS_LoadTaskAddr;in Index:Rn, tmp:Rn(только не Z), out Z
+	.macro RTOS_LoadTaskAddr;in Index:Rn, tmp:Rn,  out Addr:XYZ=Z
 		;.equ RTOS_USE255TASKS; else 128
-		ldi		ZL, low(FLASHEND+1)
-		ldi		ZH, high(FLASHEND+1)
-		;Index*sizeOf(Pointer); *2
-		lsl 	@0		;Ограничивает число задач от 256-2 до 128-1; $FF отдельно, 0 попадает.
-		sub		ZL, @0
-		sbci	ZH, 0	;Или второй регистр
-	
+		LoadAddr @0, Z, FLASHEND, 2, Backword
 		lpm		@1, Z+	; mov tmp <- CODE[Z]
 		lpm				; mov r0 <- CODE[Z+1]
-		mov 	ZL, @1	; Get Addr
 		mov 	ZH, r0		
+		mov 	ZL, @1	; Get Addr
 	.endm
 
 ;== PROCESS TASK QUEUE =======================================================
@@ -344,3 +338,4 @@ STL06:
 		pop 	ZH
 		pop 	ZL
 		ret	
+;====[The End]======================================================

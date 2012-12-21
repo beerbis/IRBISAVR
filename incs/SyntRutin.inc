@@ -47,3 +47,40 @@
 			.set @0 = 1
 		.endif
 	.endm
+;===============================================================================
+		;TDirection = (
+	.equ Forward = 0
+	.equ Backword = 1 ;)	0			1				2				3			4
+	.macro LoadAddr;in Index:Rn, out Addr: XYZ, in Table: Pointer, ItemSize, Direction: TDirection
+		;вычислени и загрузка базы в индексную пару.
+		.if		@4 == Backword
+			ldi		@1L, low(@2-@3+1)
+			ldi		@1H, high(@2-@3+1)
+		.elif	@4 == Forward
+			ldi		@1L, low(@2)
+			ldi		@1H, high(@2)
+		.else 
+			.error ">>>Unknown Table-index direction<<<"
+		.endif
+		
+		;смещение по индексу от базы
+		.if		@3 == 1
+		.elif	@3 == 2
+			lsl		@0	
+		.else
+			.error ">>>not realized, till: you can do it $)<<<"
+		.endif
+		
+		;применение смещения к базе
+		.if		@4 == Backword
+			sub		@1L, @0
+			sbci	@1H, 0	;Или второй регистр
+		.elif	@4 == Forward
+			add		@1L, @0
+			brcc	DoNotInc ;стрёмный вариант вместо adci
+			inc		@1H
+			DoNotInc:
+		.else
+			.error ">>>Unknown Table-index direction<<<"
+		.endif
+	.endm
