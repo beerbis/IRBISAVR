@@ -13,6 +13,8 @@
 			.equ RTOS_TimersPoolSize = 5
 			.include "..\incs\RTOS.inc"	; Макросы: в очередь таймеров, в очередь исполнения, служба таймеров(на прерывании у нас)
 			;.include "..\incs\Usart.inc"
+			.equ MzLinePort = PORTD
+			.equ MzLinePin  = 6
 			.include "..\incs\AzbukaMorze.inc"
 .DSEG
 R_flag:		.byte	1
@@ -35,6 +37,7 @@ Reset:		SysZeroMemory
 Background:	RCALL 	OnGreen
 			RCALL	OnRed
 			RCALL	OnWhite
+			RCALL	TSMzLoadLetter
 
 
 Main:		SEI								; Разрешаем прерывания.

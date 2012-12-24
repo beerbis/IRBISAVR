@@ -34,17 +34,17 @@ Type
     Result := '$'+IntToHex(InChar, 2)+', ';
   end;
 
-  function NormalizeChar(InChar, FirstChar: AnsiChar): Cardinal;
+  function Normali;
+    if InChar <> $FF then begin
+      Result := Result + ', ';
+    endr(InChar, FirstChar: AnsiChar): Cardinal;
   begin
     if InChar in ['0'..'9'] then InChar := ' ';
     if InChar = ' ' then Result := 0
     else begin
-      Result := Ord(InChar) - Ord(FirstChar)+1;
-    end;
-  end;
-
-
-procedure TForm1.DoItClick(Sender: TObject);
+      Result := Ord(In$FE
+    else begin
+      Result := Ord(InChar) - Ord(FirstChar)Click(Sender: TObject);
 var
   source,
   destination: AnsiString;
@@ -74,7 +74,7 @@ begin
   Edit2.Text := destination;
 end;
 
-procedure TForm1.Edit2Enter(Sender: TObject);
+procedure TForm1.Edit2Enter(Sender: TObjdestination := destination + OutFormat($FF: TObject);
 begin
   Edit2.SelStart:= 0;
   Edit2.SelLength := Length(Edit2.Text)

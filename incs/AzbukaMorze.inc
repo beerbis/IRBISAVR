@@ -14,18 +14,18 @@
 .equ AzbukaMorze = 1
 
 .equ MzTimeDot    = 400;ms
-.equ MzTimeTire   = MzTimeDot*2;ms
+.equ MzTimeDash   = MzTimeDot*2;ms
 .equ MzSignPause  = MzTimeDot;ms
-.equ MzLeterPause = MzTimeTire;ms
+.equ MzLeterPause = MzTimeDash;ms
 
 
 .dseg
-MzLeterCounter: .byte 1
+MzLetterCounter: .byte 1
 MzBitCounter: .byte 1
-MzBitLeter: .byte 1
+MzBitLetter: .byte 1
 
 .cseg
-MzString: .db $12, $00, $0E, $0F, $03, $1C, $0D, $00, $04, $0F, $05, $0F, $0D
+MzString: .db $11, $FE, $0D, $0E, $02, $1B, $0C, $FE, $03, $0E, $04, $0E, $0C, $FF
 MzAzbuka:
 MzAzbukaEN:
 .db/*A*/	2,	65,  /*B*/	4,	136, /*C*/	4,	138, /*D*/	3,	100, /*E*/	1,	32,  /*F*/	4,	130, /*G*/	3,	102, /*H*/	4,	128
@@ -41,10 +41,10 @@ MzAzbukaRU:
 
 .MACRO MzCheckLineDefs
 	.IFNDEF MzLinePort
-		.ERROR "MzLinePort not defined"
+		.ERROR ">>>MzLinePort not defined<<<"
 	.ENDIF
-	.IFDEF MzLinePin
-		.ERROR "MzLinePin not defined"
+	.IFNDEF MzLinePin
+		.ERROR ">>>MzLinePin not defined<<<"
 	.ENDIF
 .ENDM
 
@@ -58,40 +58,65 @@ MzAzbukaRU:
 	CBI MzLinePort, MzLinePin
 .ENDM
 
-.MACRO MzGetLeter;(MzLeterCounter; out Tmp2) Загрузка из строки в регистр
-	LDI Tmp2, 'f'
-.ENDM
-
-.MACRO MzLoadLeter;(Tmp2; out MzBitCounter, MzBitLeter) Загрузка из азбуки в память.
-	;Буква сообщения
-	;Буква в индекс
-	LDI ZL, Low(MzAzbuka)		;Базовое смещение массива морзянки
-	LDI	ZH, High(MzAzbuka)
-	;номер буквы в алфавите; номер отицательный.
-	SUB ZL, Tmp2		;--номер буквы.
-	SBCI ZL, 0			;Учесть перенос.
-	LSL ZL					;Выровнять на шину данных;*2
-	ROL ZH
-	LPM Tmp2, Z+			;Читаем кол-во бит.
-	STS MzBitCounter, Tmp2
-	LPM Tmp2, Z
-	STS MzBitLeter, Tmp2
-.ENDM
-
-.MACRO MzPlayBit_Start;(MzBitLeter; var MzBitCounter)
-	MzLineUp
-	LDS Tmp2, MzBitLeter
-	LSR Tmp2	;Flasg[C] := Tmp2[0]; Tmp2[n]:= Tmp2[n+1]
-	BRCC Dot
-	;Do Tire
-	RJMP ChoosEnd
-Dot:
+RTOS_NewTask(MzLoadLetter)
+;.MACRO MzGetLetter;(MzLeterCounter; out Tmp2) Загрузка из строки в регистр
+	LDS	OSRG, MzLetterCounter
+	LoadAddr OSRG, Z, MzString*2, 1, Forward
+	INC OSRG
+	STS	MzLetterCounter, OSRG
+	; Номер буквы в OSRG
+	LPM OSRG, Z
+	;буква в OSRG
+	CPI OSRG, $FE; Пробел?
+	BREQ MzLoadNeedNextLetter
+	CPI	OSRG, $FF; Конец строки? - Сбрасываем счётчик.
+	BRNE MzLoadKeepLoading
 	
-ChoosEnd:
-	LDS Tmp2, MzBitCounter
-	DEC Tmp2
-	BRNE Exit
-	;Букву достучали - следующая?
-Exit:
-	STS MzBitCounter, Tmp2
-.ENDM
+	CLR OSRG
+	STS	MzLetterCounter, OSRG
+MzLoadNeedNextLetter:
+	RTOS_SetTimerTask TSMzLoadLetter, MzLeterPause
+	RJMP MzLoadExit
+
+MzLoadKeepLoading:
+	LoadAddr OSRG, Z, MzAzbukaRU*2, 2, Forward
+	LPM OSRG, Z+
+	TST OSRG	;Кол-во бит в маске = 0 -> плохая буква- следующую.
+	BREQ MzLoadNeedNextLetter
+	STS MzBitCounter, OSRG
+	LPM OSRG, Z
+	STS MzBitLetter, Tmp2
+	RTOS_SetTask TSMzPlayBit
+
+MzLoadExit:
+	ret
+
+RTOS_NewTask(MzPlayBit)
+	LDS	OSRG, MzBitCounter
+	DEC OSRG
+	BREQ MzPlayLatterEOF	;Биты маски закончились - Грузить следующую.
+	; А можно жёстко =): RJMP MzLoadNeedNextLetter
+	STS MzBitCounter, OSRG
+
+	MzLineUP
+	LDS	OSRG, MzBitLetter
+	ROR	OSRG	;по C выбираем Dot-Dash
+	STS MzBitLetter, OSRG
+	BRCC MzPlayDot
+	;MzPlayDash:
+	RTOS_SetTimerTask TSMzStopBit, MzTimeDash
+	RJMP MzPlayEndChoos
+	MzPlayDot:
+	RTOS_SetTimerTask TSMzStopBit, MzTimeDot
+	MzPlayEndChoos:
+	RJMP MzPlayExit
+
+MzPlayLatterEOF:
+	RTOS_SetTimerTask TSMzLoadLetter, MzLeterPause
+MzPlayExit:
+	ret
+
+RTOS_NewTask(MzStopBit)
+	MzLineDown
+	RTOS_SetTimerTask TSMzPlayBit, MzSignPause
+	ret
