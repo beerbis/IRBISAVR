@@ -25,6 +25,7 @@ MzBitCounter: .byte 1
 MzBitLeter: .byte 1
 
 .cseg
+MzString: .db $12, $00, $0E, $0F, $03, $1C, $0D, $00, $04, $0F, $05, $0F, $0D
 MzAzbuka:
 MzAzbukaEN:
 .db/*A*/	2,	65,  /*B*/	4,	136, /*C*/	4,	138, /*D*/	3,	100, /*E*/	1,	32,  /*F*/	4,	130, /*G*/	3,	102, /*H*/	4,	128

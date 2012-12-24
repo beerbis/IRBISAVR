@@ -12,7 +12,7 @@
 			.equ RTOS_TaskQueueSize = 10
 			.equ RTOS_TimersPoolSize = 5
 			.include "..\incs\RTOS.inc"	; Макросы: в очередь таймеров, в очередь исполнения, служба таймеров(на прерывании у нас)
-			.include "..\incs\Usart.inc"
+			;.include "..\incs\Usart.inc"
 			.include "..\incs\AzbukaMorze.inc"
 .DSEG
 R_flag:		.byte	1
@@ -29,7 +29,7 @@ Reset:		SysZeroMemory
 			SysInitStack
 			RTOS_INIT
 			RTOS_TurnOnTimer
-			UsartINIT 9600
+			;UsartINIT 9600
 
 
 Background:	RCALL 	OnGreen
@@ -66,10 +66,6 @@ RTOS_NewTask(OnWhite)
 RTOS_NewTask(OffWhite)
 			CBI		PORTB,3
 			RTOS_SetTimerTask	TSOnWhite, 66
-			RET
-RTOS_NewTask(ResetR)
-			CLR		OSRG
-			STS		R_Flag, OSRG
 			RET
 
 ;== [THE END] ===========================================================
