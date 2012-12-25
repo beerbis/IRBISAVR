@@ -148,8 +148,9 @@ Comp1L03:	subi 	ZL,Low(-3)			; Skip Counter
 			.dw @0
 			.ORG @0
 		.endm	
-;== CLEAR TASK QUEUE PROC BODY =========================================================
-	.macro RTOS_InitTaskQueueHD
+;== CLEAR TASK QUEUE PROC BODY ==========, 0
+			.equ TS@0 = RTOS_TaskCounter
+			.ORG FLASHEND - RTOS_TaskCounterHD
 		//.equ RTOS_InitTaskQueue.Exists = 1
 		push 	ZL
 		push 	ZH
@@ -212,7 +213,7 @@ CTL01:	st 		Z+, OSRG		; Event
 		mov 	ZL, @1	; Get Addr
 	.endm
 
-;== PROCESS TASK QUEUE =======================================================
+;== PROCESS TASK QUEUE =======================================================*2+1
 .CSEG
 RTOS_ProcessTaskQueue:
 ;вытаскиваем индекс задачи из начала очереди.

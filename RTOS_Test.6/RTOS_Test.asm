@@ -16,15 +16,13 @@
 			.equ MzLinePort = PORTD
 			.equ MzLinePin  = 6
 			.include "..\incs\AzbukaMorze.inc"
-.DSEG
-R_flag:		.byte	1
 
 ;== Interrupts ==================================================================
 .CSEG
 OutComp2Int: RTOS_TimerServiceBody; Прерывание Timer2.
 			RETI	
-.include "ProjectIntMacro.inc"		;Тела моих прерываний(векторов)- с глаз долой.
-Uart_RCV:	PjIntUartRecived
+;.include "ProjectIntMacro.inc"		;Тела моих прерываний(векторов)- с глаз долой.
+Uart_RCV:	reti;PjIntUartRecived
 
 ;== Main Code Here ==============================================================
 Reset:		SysZeroMemory
@@ -34,10 +32,10 @@ Reset:		SysZeroMemory
 			;UsartINIT 9600
 
 
-Background:	RCALL 	OnGreen
-			RCALL	OnRed
-			RCALL	OnWhite
-			RCALL	TSMzLoadLetter
+Background:	;RCALL 	OnGreen
+			;RCALL	OnRed
+			;RCALL	OnWhite
+			RCALL	MzLoadLetter
 
 
 Main:		SEI								; Разрешаем прерывания.
@@ -46,13 +44,13 @@ Main:		SEI								; Разрешаем прерывания.
 			rjmp 	Main					; Основной цикл микроядра РТОС
 
 ;== Tasks =======================================================================
-RTOS_NewTask(OnGreen)	
-			SBI		PORTB,1		; Зажечь зеленый
+/*RTOS_NewTask(OnGreen)	
+			SBI		PORTD,6		; Зажечь зеленый
 			RTOS_SetTimerTask	TSOffGreen, 500
 			RET
 RTOS_NewTask(OffGreen)	
-			CBI 	PORTB,1		; Погасить зеленый
-			RTOS_SetTimerTask	TSOnGreen,500
+			CBI 	PORTD,6		; Погасить зеленый
+			RTOS_SetTimerTask	TSONGreen,500
 			RET
 RTOS_NewTask(OnRed)
 			SBI		PORTB,2
@@ -70,5 +68,6 @@ RTOS_NewTask(OffWhite)
 			CBI		PORTB,3
 			RTOS_SetTimerTask	TSOnWhite, 66
 			RET
+*/
 
 ;== [THE END] ===========================================================
